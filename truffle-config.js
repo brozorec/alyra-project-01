@@ -10,13 +10,19 @@ module.exports = {
     ganache: {
       host: "localhost",
       port: 7545,
-      network_id: 5777
+      network_id: "*"
     },
     ropsten: {
       provider: function() {
         return new HDWalletProvider(`${process.env.MNEMONIC}`, `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`)
       },
       network_id: 3
+    },
+    kovan: {
+      provider: function() {
+        return new HDWalletProvider(`${process.env.MNEMONIC}`, `https://kovan.infura.io/v3/${process.env.INFURA_ID}`)
+      },
+      network_id: 42
     }
   },
   compilers: {

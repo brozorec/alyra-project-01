@@ -4,7 +4,6 @@ import getWeb3 from "./getWeb3";
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
-import Snackbar from '@material-ui/core/Snackbar';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
@@ -23,7 +22,7 @@ const getContract = async (contract) => {
   return instance;
 }
 
-function Admin({ account }) {
+function Admin({ account, setMsg }) {
   const steps = [
     "Enregistrement des votants",
     "Début d'enregistrement des propositions",
@@ -33,13 +32,11 @@ function Admin({ account }) {
     "Votes comptés"
   ];
   const [addr, setAddr] = useState();
-  const [msg, setMsg] = useState();
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     const getStep = async () => {
       const contract = await getContract(Voting);
-      const web3 = await getWeb3();
       const response = await contract.methods.status().call();
       setActiveStep(Number(response));
     }
@@ -51,6 +48,7 @@ function Admin({ account }) {
     const contract = await getContract(Voting);
     const web3 = await getWeb3();
 
+    console.log(addr);
     await contract.methods.whitelist(addr).send({ from: account }, async function(err, tx) {
       if (tx) {
         console.log(tx);
@@ -59,7 +57,7 @@ function Admin({ account }) {
 
           if(receipt.status){
             setAddr(null);
-            setMsg('success');
+            setMsg(`L'adresse ${addr} a été enregistrée !`);
           }
         })
       }
@@ -81,8 +79,32 @@ function Admin({ account }) {
           console.log(receipt);
 
           if(receipt.status){
-            setActiveStep(activeStep + 1);
-            setMsg('success');
+            if (activeStep < 4)
+              setActiveStep(activeStep + 1);
+            setMsg('Le statut du vote a été changé !');
+          }
+        })
+      }
+      else if (err) {
+        console.log(err);
+        setMsg('error');
+      }
+    });
+  }
+
+  const setWinner = async() => {
+    const contract = await getContract(Voting);
+    const web3 = await getWeb3();
+
+    await contract.methods.setWinner().send({ from: account }, async function(err, tx) {
+      if (tx) {
+        console.log(tx);
+        await web3.eth.getTransactionReceipt(tx, async function(err, receipt) {
+          console.log(receipt);
+
+          if(receipt.status){
+            setActiveStep(5);
+            setMsg('Les votes ont été comptés et la proposition gagnante a été declarée !');
           }
         })
       }
@@ -127,19 +149,17 @@ function Admin({ account }) {
             ))}
           </Stepper>
         </Grid>
-        <Grid item>
-          <Button variant="contained" color="primary" onClick={() => nextStep()}>
-            Étape suivante
-          </Button>
+        <Grid item>{
+          activeStep === 4
+            ? <Button variant="contained" color="secondary" onClick={() => setWinner()}>
+              Compter les votes
+            </Button>
+            : <Button variant="contained" color="primary" onClick={() => nextStep()} disabled={activeStep === 5}>
+              Étape suivante
+            </Button>
+          }
         </Grid>
       </Grid>
-      <Snackbar autoHideDuration={6000} open={!!msg} onClose={() => setMsg(null)} message={
-        msg === 'error'
-          ? "Une erreur est survenue !"
-          : msg === 'success' 
-            ? "C'est bon !"
-            : ""
-        }/>
     </div>
   );
 }

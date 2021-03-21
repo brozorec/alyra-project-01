@@ -93,6 +93,8 @@ contract Voting is Ownable {
         winningProposalId = winner + 1;
         
         emit VotesTallied();
+        status = WorkflowStatus.VotesTallied;
+        emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, status);
     }
     
     function changeToNextStatus() external onlyOwner {
@@ -110,10 +112,11 @@ contract Voting is Ownable {
         else if (status == WorkflowStatus.VotingSessionStarted) {
             status = WorkflowStatus.VotingSessionEnded;
         }
-        else {
-            status = WorkflowStatus.VotesTallied;
-        }
         
         emit WorkflowStatusChange(previousStatus, status);
+    }
+
+    function proposalsCount() external returns(uint) {
+      return proposals.length;
     }
 }

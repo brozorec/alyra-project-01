@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from "react";
-import Voting from "./contracts/Voting.json";
+import { useWallet, UseWalletProvider } from 'use-wallet';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+} from "react-router-dom";
 import getWeb3 from "./getWeb3";
+import Snackbar from '@material-ui/core/Snackbar';
 
 import "./App.css";
 import Admin from "./Admin";
 import Public from "./Public";
 
-const getContract = async (contract) => {
-  const web3 = await getWeb3();
-
-  // Get the contract instance.
-  const networkId = await web3.eth.net.getId();
-  const deployedNetwork = contract.networks[networkId];
-  const instance = new web3.eth.Contract(
-    contract.abi,
-    deployedNetwork && deployedNetwork.address,
-  );
-
-  return instance;
-}
+const CHAIN_ID = 1337;
 
 function App() {
+  const wallet = useWallet();
+
   const [account, setAccount] = useState(null);
+  const [msg, setMsg] = useState();
+
+  useEffect(() => {
+    if (window.ethereum && window.ethereum.on) {
+      window.ethereum.on('accountsChanged', () => {
+        wallet.connect();
+      });
+    }
+  }, [wallet]);
 
   useEffect(() => {
     const getAccounts = async () => {
@@ -37,9 +42,23 @@ function App() {
 
   return (
     <div className="App">
-      <Admin account={account} />
+      <Router>
+        <Switch>
+          <Route exact path="/">
+            <Public account={account} setMsg={setMsg} />
+          </Route>
+          <Route path="/admin">
+            <Admin account={account} setMsg={setMsg} />
+          </Route>
+        </Switch>
+      </Router>
+      <Snackbar autoHideDuration={6000} open={!!msg} onClose={() => setMsg(null)} message={msg}/>
     </div>
   );
 }
 
-export default App;
+export default () => (
+  <UseWalletProvider chainId={CHAIN_ID}>
+    <App/>
+  </UseWalletProvider>
+)
