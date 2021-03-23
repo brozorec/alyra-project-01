@@ -127,6 +127,9 @@ function Public({ account, setMsg }) {
   return (
     <Grid direction="column" container spacing={3} style={{ padding: "100px" }}>
       <Grid item>
+        <a href="/admin">Jump_To_Admin</a>
+      </Grid>
+      <Grid item>
         <h4>Étapes du vote</h4>
       </Grid>
       <Grid item>

@@ -117,6 +117,9 @@ function Admin({ account, setMsg }) {
 
   return (
     <div>
+      <Grid item>
+        <a href="/">Jump_To_Public</a>
+      </Grid>
       <h2>Administration</h2>
       <form noValidate autoComplete="off">
         <Grid direction="column" container spacing={3} style={{ paddingTop: "100px" }}>
